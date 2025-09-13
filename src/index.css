@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Gamified STEM Learning Platform Design System - Dark Gaming Theme */
+
+@layer base {
+  :root {
+    /* Dark Theme Base Colors */
+    --background: 220 25% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 220 25% 10%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 220 25% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    /* Gaming-Inspired Accent Colors */
+    --primary: 255 70% 60%;  /* Electric Blue */
+    --primary-foreground: 210 20% 95%;
+    --primary-glow: 255 70% 70%;
+
+    --secondary: 280 60% 65%;  /* Purple */
+    --secondary-foreground: 210 20% 95%;
+
+    --accent: 120 70% 55%;  /* Neon Green */
+    --accent-foreground: 220 25% 8%;
+
+    --muted: 220 15% 15%;
+    --muted-foreground: 210 15% 65%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 95%;
+
+    --border: 220 20% 18%;
+    --input: 220 20% 15%;
+    --ring: 255 70% 60%;
+
+    --radius: 0.75rem;
+
+    /* Gaming UI Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(255 70% 60%), hsl(280 60% 65%));
+    --gradient-accent: linear-gradient(135deg, hsl(120 70% 55%), hsl(180 70% 50%));
+    --gradient-card: linear-gradient(135deg, hsl(220 25% 10%), hsl(220 25% 12%));
+    
+    /* XP and Progress Colors */
+    --xp-bar: 120 70% 55%;
+    --level-gold: 45 100% 60%;
+    --streak-fire: 15 100% 60%;
+    
+    /* Subject Colors */
+    --math-color: 240 70% 65%;
+    --science-color: 120 70% 55%;
+    --tech-color: 280 70% 60%;
+    --engineering-color: 30 100% 60%;
+
+    /* Shadows and Glows */
+    --shadow-card: 0 8px 32px hsl(220 25% 4% / 0.4);
+    --shadow-floating: 0 16px 48px hsl(220 25% 4% / 0.6);
+    --glow-primary: 0 0 40px hsl(255 70% 60% / 0.3);
+    --glow-accent: 0 0 40px hsl(120 70% 55% / 0.3);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Sidebar for Teacher Dashboard */
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 255 70% 60%;
+    --sidebar-primary-foreground: 210 20% 95%;
+    --sidebar-accent: 220 25% 12%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 255 70% 60%;
+  }
+
+  /* Custom Gaming UI Classes */
+  .quest-card-hover {
+    @apply hover:scale-105 hover:shadow-2xl transition-all duration-300 hover:bg-gradient-to-br hover:from-primary/10 hover:to-secondary/10;
+  }
+  
+  .xp-glow {
+    box-shadow: 0 0 20px hsl(var(--xp-bar) / 0.5);
+  }
+  
+  .level-badge {
+    @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold;
+  }
+  
+  .subject-math { @apply bg-gradient-to-br from-blue-500/20 to-blue-600/30 border-blue-500/30; }
+  .subject-science { @apply bg-gradient-to-br from-green-500/20 to-green-600/30 border-green-500/30; }
+  .subject-tech { @apply bg-gradient-to-br from-purple-500/20 to-purple-600/30 border-purple-500/30; }
+  .subject-engineering { @apply bg-gradient-to-br from-orange-500/20 to-orange-600/30 border-orange-500/30; }
+  
+  .floating-card {
+    box-shadow: var(--shadow-floating);
+    @apply border border-border/20;
+  }
+  
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+  
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
