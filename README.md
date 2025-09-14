@@ -1,77 +1,42 @@
-# Welcome to your Lovable project
+STEMLearning Platform
 
-## Project info
+The STEMLearning Platform is a modern, TypeScript-based web application designed to make STEM (Science, Technology, Engineering, Mathematics) education engaging and accessible. It combines interactive lessons, simulations, and assessments with progress tracking tools for both learners and educators.
 
-**URL**: https://lovable.dev/projects/f0460d1c-275c-44d3-8958-e5c59a29d901
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+🚀 Features
 
-**Use Lovable**
+📚 Interactive Lessons – STEM concepts explained through visuals and step-by-step modules.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f0460d1c-275c-44d3-8958-e5c59a29d901) and start prompting.
+🧩 Quizzes & Assessments – Test knowledge with instant feedback.
 
-Changes made via Lovable will be committed automatically to this repo.
+🔬 Virtual Labs & Simulations – Experiment with concepts in real time.
 
-**Use your preferred IDE**
+📈 Progress Tracking – Personalized dashboards for learners and analytics for teachers.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+👩‍🏫 Educator Tools – Create, assign, and manage STEM learning modules.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+🌍 Multi-language Support – Reach learners worldwide.
 
-Follow these steps:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+---
 
-# Step 3: Install the necessary dependencies.
-npm i
+🛠️ Tech Stack
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Language: TypeScript
 
-**Edit a file directly in GitHub**
+Frontend: Next.js (React + TypeScript), TailwindCSS
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Backend: Node.js (Express + TypeScript) or NestJS
 
-**Use GitHub Codespaces**
+Database: PostgreSQL / MongoDB (via Prisma or TypeORM)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Authentication: JWT / OAuth 2.0
 
-## What technologies are used for this project?
+Testing: Jest + React Testing Library
 
-This project is built with:
+DevOps: Docker, GitHub Actions (CI/CD)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/f0460d1c-275c-44d3-8958-e5c59a29d901) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-# StemLearn
-# StemLearn
-# StemLearn
-# StemLearn
+Hosting: Vercel / AWS / Netlify
