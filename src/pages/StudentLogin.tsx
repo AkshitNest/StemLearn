@@ -1,44 +1,101 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Smartphone, QrCode, Gamepad2 } from 'lucide-react';
+import { Smartphone, QrCode, Gamepad2, ArrowLeft, User } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useStudent } from '@/contexts/StudentContext';
 import LanguageSelector from '@/components/LanguageSelector';
+import OTPVerification from '@/components/OTPVerification';
+import { otpService } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { DemoInstructions } from '@/lib/demo-otp';
 
 const StudentLogin: React.FC = () => {
   const { t } = useLanguage();
+  const { updateStudentData } = useStudent();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [mobileNumber, setMobileNumber] = useState('');
-  const [otp, setOtp] = useState('');
+  const [studentName, setStudentName] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isRecaptchaReady, setIsRecaptchaReady] = useState(false);
+
+  // Initialize OTP service when component mounts
+  React.useEffect(() => {
+    const initializeOTP = async () => {
+      try {
+        await otpService.initializeRecaptcha('login-recaptcha-container');
+        setIsRecaptchaReady(true);
+      } catch (error) {
+        console.error('Failed to initialize OTP service:', error);
+        setError('Failed to initialize verification. Please refresh the page.');
+      }
+    };
+
+    initializeOTP();
+
+    // Cleanup on unmount
+    return () => {
+      otpService.clearRecaptcha();
+    };
+  }, []);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mobileNumber.length !== 10) return;
     
+    setError('');
     setIsLoading(true);
-    // Mock OTP sending - in real app would send actual OTP
-    setTimeout(() => {
-      setShowOtpInput(true);
+
+    try {
+      const result = await otpService.sendOTP(`+91${mobileNumber}`);
+      
+      if (result.success) {
+        setShowOtpInput(true);
+        toast({
+          title: "OTP Sent!",
+          description: "Please check your phone for the verification code.",
+        });
+      } else {
+        setError(result.message);
+      }
+    } catch (error: any) {
+      console.error('Send OTP error:', error);
+      setError('Failed to send OTP. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length !== 6) return;
-    
-    setIsLoading(true);
-    // Mock OTP verification - in real app would verify actual OTP
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate('/student');
-    }, 1500);
+  const handleOTPSuccess = (user: any) => {
+    // Update student data with verified phone number and name
+    updateStudentData({
+      name: studentName || user.displayName || `Student ${user.phoneNumber}`,
+      profile: {
+        ...user,
+        phone: user.phoneNumber,
+        firstName: studentName || user.displayName || '',
+      }
+    });
+
+    toast({
+      title: "Login Successful!",
+      description: `Welcome to StemLearn, ${studentName || 'Student'}!`,
+    });
+
+    navigate('/student');
+  };
+
+  const handleBackToPhone = () => {
+    setShowOtpInput(false);
+    setError('');
+    otpService.clearRecaptcha();
   };
 
   const handleQRLogin = () => {
@@ -48,6 +105,7 @@ const StudentLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+
       {/* Background Animation */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (
@@ -105,9 +163,31 @@ const StudentLogin: React.FC = () => {
             </p>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Demo Instructions */}
+          <DemoInstructions />
+
           {/* Login Form */}
           {!showOtpInput ? (
             <form onSubmit={handleSendOtp} className="space-y-6">
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Enter your name"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  className="pl-10 bg-background/50 border-border hover:bg-background/70 focus:bg-background transition-colors"
+                  required
+                />
+              </div>
+
               <div className="relative">
                 <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -122,87 +202,68 @@ const StudentLogin: React.FC = () => {
 
               <Button 
                 type="submit"
-                disabled={mobileNumber.length !== 10 || isLoading}
+                disabled={!studentName.trim() || mobileNumber.length !== 10 || isLoading || !isRecaptchaReady}
                 className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground font-medium py-3 glow-primary disabled:opacity-50"
               >
                 {isLoading ? 'Sending...' : t('sendOtp')}
               </Button>
+
+              {!isRecaptchaReady && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Initializing verification...
+                </p>
+              )}
             </form>
           ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-              <div className="text-center mb-4">
-                <p className="text-sm text-muted-foreground">
-                  OTP sent to +91 {mobileNumber}
-                </p>
-              </div>
-              
-              <div className="flex justify-center">
-                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
-              </div>
-
-              <Button 
-                type="submit"
-                disabled={otp.length !== 6 || isLoading}
-                className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground font-medium py-3 glow-primary disabled:opacity-50"
-              >
-                {isLoading ? 'Verifying...' : t('verifyOtp')}
-              </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setShowOtpInput(false);
-                  setOtp('');
-                  setMobileNumber('');
-                }}
-                className="w-full text-muted-foreground hover:text-foreground"
-              >
-                Change Mobile Number
-              </Button>
-            </form>
+            <OTPVerification
+              phoneNumber={`+91${mobileNumber}`}
+              onSuccess={handleOTPSuccess}
+              onBack={handleBackToPhone}
+              onResend={() => {
+                // Reinitialize reCAPTCHA for resend
+                otpService.initializeRecaptcha('login-recaptcha-container');
+              }}
+            />
           )}
 
+          {/* reCAPTCHA Container */}
+          <div id="login-recaptcha-container" className="hidden" />
+
           {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-1 h-px bg-border"></div>
-            <span className="px-4 text-muted-foreground text-sm">or</span>
-            <div className="flex-1 h-px bg-border"></div>
-          </div>
+          {!showOtpInput && (
+            <>
+              <div className="flex items-center my-6">
+                <div className="flex-1 h-px bg-border"></div>
+                <span className="px-4 text-muted-foreground text-sm">or</span>
+                <div className="flex-1 h-px bg-border"></div>
+              </div>
 
-          {/* QR Login */}
-          <Button
-            variant="outline"
-            onClick={handleQRLogin}
-            className="w-full border-border hover:bg-muted/50 transition-colors flex items-center gap-2"
-          >
-            <QrCode className="h-4 w-4" />
-            {t('qrLogin')}
-          </Button>
-
-          {/* Demo Navigation */}
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <p className="text-sm text-muted-foreground mb-3">Demo Access:</p>
-            <div className="flex gap-2">
+              {/* QR Login */}
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/teacher/login')}
-                className="flex-1 text-xs"
+                variant="outline"
+                onClick={handleQRLogin}
+                className="w-full border-border hover:bg-muted/50 transition-colors flex items-center gap-2"
               >
-                Teacher Login
+                <QrCode className="h-4 w-4" />
+                {t('qrLogin')}
               </Button>
-            </div>
-          </div>
+
+              {/* Demo Navigation */}
+              <div className="mt-6 pt-6 border-t border-border text-center">
+                <p className="text-sm text-muted-foreground mb-3">Demo Access:</p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/teacher/login')}
+                    className="flex-1 text-xs"
+                  >
+                    Teacher Login
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </Card>
       </motion.div>
     </div>
