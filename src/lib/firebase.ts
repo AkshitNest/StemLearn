@@ -104,97 +104,35 @@ export class OTPService {
 
   // Send OTP to phone number
   public async sendOTP(phoneNumber: string): Promise<{ success: boolean; message: string }> {
-    // Use demo mode if Firebase is not configured
-    if (!isFirebaseConfigured() || !auth) {
-      console.log('🧪 Using demo OTP service');
-      return demoOTPService.sendOTP(phoneNumber);
-    }
-
-    try {
-      // Initialize reCAPTCHA
-      await this.initializeRecaptcha();
-
-      // Format phone number (ensure it starts with +)
-      const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
-
-      console.log('🔥 Sending Firebase OTP to:', formattedPhoneNumber);
-
-      // Send OTP using Firebase
-      this.confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, this.recaptchaVerifier!);
-      
-      console.log('✅ Firebase OTP sent successfully');
-      return {
-        success: true,
-        message: `OTP sent to ${formattedPhoneNumber}`
-      };
-      
-    } catch (error: any) {
-      console.error('Firebase OTP send error:', error);
-      
-      // Fallback to demo mode on error
-      console.log('🧪 Falling back to demo OTP service');
-      return demoOTPService.sendOTP(phoneNumber);
-    }
+    // Always use demo mode since reCAPTCHA is disabled
+    console.log('🧪 Using demo OTP service (reCAPTCHA disabled)');
+    return demoOTPService.sendOTP(phoneNumber);
   }
 
   // Verify OTP
   public async verifyOTP(otp: string, phoneNumber?: string): Promise<{ success: boolean; user?: any; message: string }> {
-    // Use demo mode if Firebase is not configured or no confirmation result
-    if (!isFirebaseConfigured() || !auth || !this.confirmationResult) {
-      console.log('🧪 Using demo OTP verification');
-      if (!phoneNumber) {
-        return {
-          success: false,
-          message: 'Phone number required for demo verification'
-        };
-      }
-      return demoOTPService.verifyOTP(phoneNumber, otp);
-    }
-
-    try {
-      console.log('🔥 Verifying Firebase OTP:', otp);
-
-      // Verify OTP using Firebase
-      const result = await this.confirmationResult.confirm(otp);
-      
-      console.log('✅ Firebase OTP verified successfully');
-      console.log('👤 Firebase user:', result.user);
-
-      // Create user object
-      const user = {
-        uid: result.user.uid,
-        phoneNumber: result.user.phoneNumber,
-        displayName: result.user.displayName || `Student ${result.user.phoneNumber?.slice(-4)}`,
-        email: result.user.email,
-        isDemo: false
-      };
-
+    // Always use demo mode since reCAPTCHA is disabled
+    console.log('🧪 Using demo OTP verification (reCAPTCHA disabled)');
+    console.log('📱 Phone number:', phoneNumber);
+    console.log('🔐 OTP:', otp);
+    
+    if (!phoneNumber) {
       return {
-        success: true,
-        user: user,
-        message: 'OTP verified successfully'
+        success: false,
+        message: 'Phone number required for demo verification'
       };
-      
-    } catch (error: any) {
-      console.error('Firebase OTP verification error:', error);
-      
-      // Fallback to demo mode on error
-      console.log('🧪 Falling back to demo OTP verification');
-      if (!phoneNumber) {
-        return {
-          success: false,
-          message: 'Phone number required for demo verification'
-        };
-      }
-      return demoOTPService.verifyOTP(phoneNumber, otp);
     }
+    
+    const result = await demoOTPService.verifyOTP(phoneNumber, otp);
+    console.log('✅ Verification result:', result);
+    return result;
   }
 
   // Resend OTP
   public async resendOTP(phoneNumber: string): Promise<{ success: boolean; message: string }> {
-    // Clear previous confirmation result for resend
-    this.confirmationResult = null;
-    return this.sendOTP(phoneNumber);
+    // Always use demo mode since reCAPTCHA is disabled
+    console.log('🧪 Using demo OTP resend (reCAPTCHA disabled)');
+    return demoOTPService.resendOTP(phoneNumber);
   }
 
   // Clear reCAPTCHA verifier

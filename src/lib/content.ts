@@ -941,3 +941,4 @@ export const calculateTotalXP = (activities: string[]): number => {
   return totalXP;
 };
 
+

@@ -72,6 +72,29 @@ export class DemoOTPService {
       console.log('🔍 Demo OTP verification:', { phoneNumber, enteredOTP });
       console.log('📋 Stored OTPs:', Array.from(this.otpCodes.entries()));
       
+      // Check for backup OTP first (123456 for specific phone number)
+      if (phoneNumber === '+918619444155' && enteredOTP === '123456') {
+        console.log('🔑 Using backup OTP for +918619444155');
+        
+        // Create demo user
+        const user = {
+          uid: `demo_backup_${Date.now()}`,
+          phoneNumber: phoneNumber,
+          displayName: `Student ${phoneNumber.slice(-4)}`,
+          email: null,
+          isDemo: true
+        };
+
+        console.log(`✅ Backup OTP verified for ${phoneNumber}`);
+        console.log(`👤 Demo user created:`, user);
+
+        return {
+          success: true,
+          user: user,
+          message: 'OTP verified successfully (backup)'
+        };
+      }
+      
       const storedOTP = this.otpCodes.get(phoneNumber);
       
       if (!storedOTP) {
@@ -182,6 +205,11 @@ export const DemoInstructions = () => {
         <li>4. Enter the 6-digit code to verify</li>
         <li>5. OTP expires in 5 minutes</li>
       </ol>
+      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded p-2 mt-2">
+        <p className="text-xs text-green-700 dark:text-green-300 font-medium">
+          🔑 <strong>Backup OTP:</strong> For phone number +918619444155, you can always use <strong>123456</strong>
+        </p>
+      </div>
       <p className="text-xs text-blue-600 dark:text-blue-300 mt-2">
         💡 This is a demo version. In production, OTPs are sent via SMS.
       </p>

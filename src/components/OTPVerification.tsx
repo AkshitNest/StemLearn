@@ -52,14 +52,16 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     }
   }, [resendCooldown]);
 
-  // Initialize reCAPTCHA when component mounts
+  // Initialize reCAPTCHA when component mounts (disabled in demo mode)
   useEffect(() => {
     const initializeRecaptcha = async () => {
       try {
+        // reCAPTCHA is disabled, so this will just resolve
         await otpService.initializeRecaptcha('otp-recaptcha-container');
       } catch (error) {
         console.error('Failed to initialize reCAPTCHA:', error);
-        setError('Failed to initialize verification. Please refresh the page.');
+        // Don't set error in demo mode since reCAPTCHA is disabled
+        console.log('reCAPTCHA initialization skipped (demo mode)');
       }
     };
 
@@ -74,12 +76,17 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
   const handleOTPComplete = async (enteredOtp: string) => {
     if (loading || isVerified) return;
 
+    console.log('🔍 OTPVerification: handleOTPComplete called');
+    console.log('📱 Phone number:', phoneNumber);
+    console.log('🔐 Entered OTP:', enteredOtp);
+
     setOtp(enteredOtp);
     setError('');
     setLoading(true);
 
     try {
       const result = await otpService.verifyOTP(enteredOtp, phoneNumber);
+      console.log('📋 OTPVerification: Verification result:', result);
       
       if (result.success) {
         setIsVerified(true);

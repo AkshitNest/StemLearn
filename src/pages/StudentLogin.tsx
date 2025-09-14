@@ -12,7 +12,6 @@ import OTPVerification from '@/components/OTPVerification';
 import { otpService } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { DemoInstructions } from '@/lib/demo-otp';
 
 const StudentLogin: React.FC = () => {
   const { t } = useLanguage();
@@ -170,8 +169,6 @@ const StudentLogin: React.FC = () => {
             </Alert>
           )}
 
-          {/* Demo Instructions */}
-          <DemoInstructions />
 
           {/* Login Form */}
           {!showOtpInput ? (
