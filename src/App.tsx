@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import StudentLogin from "./pages/StudentLogin";
 import StudentDashboard from "./pages/StudentDashboard";
 import LearningPage from "./pages/LearningPage";
+import ModuleReaderPage from "./pages/ModuleReaderPage";
+import BlogReaderPage from "./pages/BlogReaderPage";
 import QuestsPage from "./pages/QuestsPage";
 import Leaderboard from "./pages/Leaderboard";
 import TeacherLogin from "./pages/TeacherLogin";
@@ -32,6 +34,8 @@ const App = () => (
               <Route path="/student/login" element={<StudentLogin />} />
               <Route path="/student" element={<StudentDashboard />} />
               <Route path="/student/learning" element={<LearningPage />} />
+              <Route path="/student/learning/modules/:moduleId" element={<ModuleReaderPage />} />
+              <Route path="/student/learning/blogs/:blogId" element={<BlogReaderPage />} />
               <Route path="/student/quests" element={<QuestsPage />} />
               <Route path="/student/subjects/:subject" element={<QuestsPage />} />
               <Route path="/student/leaderboard" element={<Leaderboard />} />

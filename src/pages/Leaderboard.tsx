@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Trophy, Medal, Award, Crown, Flame, Star } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -6,15 +6,32 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { useStudent } from '@/contexts/StudentContext';
 
 const Leaderboard: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  // Empty leaderboard - fresh start
-  const weeklyLeaders: Array<{rank: number, name: string, xp: number, level: number, streak: number, avatar: string}> = [];
+  const { studentData } = useStudent();
 
-  const monthlyLeaders: Array<{rank: number, name: string, xp: number, level: number, streak: number, avatar: string}> = [];
+  // Seed demo data + current user
+  const seed = useMemo(() => ([
+    { name: 'Aarav P.', xp: 1450, level: 6, streak: 12, avatar: '🧠' },
+    { name: 'Zara K.', xp: 1120, level: 5, streak: 9, avatar: '🚀' },
+    { name: 'Rohan M.', xp: 980, level: 4, streak: 7, avatar: '📚' },
+    { name: 'Mia L.', xp: 760, level: 4, streak: 5, avatar: '🧪' },
+    { name: 'Leo S.', xp: 540, level: 3, streak: 3, avatar: '🔧' },
+  ]), []);
+
+  const merged = useMemo(() => {
+    const you = { name: `${studentData.name}`, xp: studentData.level * 100 + studentData.currentXP, level: studentData.level, streak: studentData.streak, avatar: '👤' };
+    const list = [...seed, you];
+    list.sort((a, b) => b.xp - a.xp);
+    return list.map((p, i) => ({ rank: i + 1, ...p }));
+  }, [seed, studentData]);
+
+  const weeklyLeaders = merged;
+  const monthlyLeaders = merged.map(p => ({ ...p, xp: Math.round(p.xp * 1.3) }));
 
   const getRankIcon = (rank: number) => {
     switch (rank) {

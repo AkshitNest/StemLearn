@@ -23,13 +23,20 @@ import {
   LEARNING_CONTENT, 
   LABS, 
   BLOGS, 
+  COURSE_MODULES,
+  LESSON_MODULES,
   getContentBySubject, 
   getLabsBySubject, 
   getFeaturedBlogs,
+  getModulesBySubject,
+  getModulesByClass,
+  getLessonModulesByClass,
   XP_REWARDS,
   LearningContent,
   Lab,
-  Blog
+  Blog,
+  CourseModule,
+  LessonModule
 } from '@/lib/content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +46,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import AnimatedLabModal from '@/components/AnimatedLabModal';
+import LabDetailModal from '@/components/LabDetailModal';
+import CourseModuleModal from '@/components/CourseModuleModal';
 
 const LearningPage: React.FC = () => {
   const { t } = useLanguage();
@@ -46,10 +56,43 @@ const LearningPage: React.FC = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
+  const [selectedClass, setSelectedClass] = useState<number | 'all'>('all');
+  const [activeTab, setActiveTab] = useState<'lessons' | 'lesson-modules' | 'labs' | 'blogs' | 'modules'>('lessons');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [completedContent, setCompletedContent] = useState<string[]>([]);
   const [expandedContent, setExpandedContent] = useState<string | null>(null);
+  const [animLabOpen, setAnimLabOpen] = useState(false);
+  const [activeAnimLabId, setActiveAnimLabId] = useState<string | null>(null);
+  const [detailLabOpen, setDetailLabOpen] = useState(false);
+  const [activeDetailLab, setActiveDetailLab] = useState<Lab | null>(null);
+  const [moduleModalOpen, setModuleModalOpen] = useState(false);
+  const [activeModule, setActiveModule] = useState<CourseModule | null>(null);
+
+  const openAnimLab = (labId: string) => {
+    setActiveAnimLabId(labId);
+    setAnimLabOpen(true);
+  };
+  const closeAnimLab = () => {
+    setAnimLabOpen(false);
+    setActiveAnimLabId(null);
+  };
+  const openDetailLab = (lab: Lab) => {
+    setActiveDetailLab(lab);
+    setDetailLabOpen(true);
+  };
+  const closeDetailLab = () => {
+    setDetailLabOpen(false);
+    setActiveDetailLab(null);
+  };
+  const openModule = (module: CourseModule) => {
+    setActiveModule(module);
+    setModuleModalOpen(true);
+  };
+  const closeModule = () => {
+    setModuleModalOpen(false);
+    setActiveModule(null);
+  };
 
   // Load completed content from localStorage
   useEffect(() => {
@@ -109,6 +152,30 @@ const LearningPage: React.FC = () => {
     return matchesSearch;
   });
 
+  const filteredModules = COURSE_MODULES.filter(module => {
+    const matchesSearch = module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         module.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         module.problemStatement.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSubject = selectedSubject === 'all' || module.subject === selectedSubject;
+    const matchesClass = selectedClass === 'all' || module.class === selectedClass;
+    const matchesDifficulty = selectedDifficulty === 'all' || module.level === selectedDifficulty;
+    
+    return matchesSearch && matchesSubject && matchesClass && matchesDifficulty;
+  });
+
+  const filteredLessonModules = LESSON_MODULES.filter(module => {
+    const matchesSearch = module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         module.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         module.problemStatement.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSubject = selectedSubject === 'all' || module.subject === selectedSubject;
+    const matchesClass = selectedClass === 'all' || module.class === selectedClass;
+    const matchesDifficulty = selectedDifficulty === 'all' || module.level === selectedDifficulty;
+    
+    return matchesSearch && matchesSubject && matchesClass && matchesDifficulty;
+  });
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
@@ -130,7 +197,6 @@ const LearningPage: React.FC = () => {
   };
 
   const ContentCard: React.FC<{ content: LearningContent }> = ({ content }) => {
-    const isCompleted = completedContent.includes(content.id);
     const isExpanded = expandedContent === content.id;
 
     return (
@@ -141,13 +207,12 @@ const LearningPage: React.FC = () => {
         exit={{ opacity: 0, y: -20 }}
         className="group"
       >
-        <Card className={`transition-all duration-200 hover:shadow-lg ${isCompleted ? 'ring-2 ring-green-500 bg-green-50/50 dark:bg-green-950/20' : ''}`}>
+        <Card className={`transition-all duration-200 hover:shadow-lg`}>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 {getTypeIcon(content.type)}
                 <CardTitle className="text-lg">{content.title}</CardTitle>
-                {isCompleted && <Badge variant="secondary" className="bg-green-100 text-green-800">Completed</Badge>}
               </div>
               <div className="flex items-center gap-2">
                 <Badge className={getDifficultyColor(content.difficulty)}>
@@ -240,11 +305,10 @@ const LearningPage: React.FC = () => {
 
             <div className="flex gap-2 mt-4">
               <Button
-                onClick={() => completeContent(content.id, content.xpReward)}
-                disabled={isCompleted}
+                onClick={() => setExpandedContent(isExpanded ? null : content.id)}
                 className="flex-1"
               >
-                {isCompleted ? 'Completed' : 'Start Learning'}
+                {isExpanded ? 'Hide Details' : 'Start Lesson'}
               </Button>
               <Button variant="outline" size="sm">
                 <Play className="h-4 w-4 mr-1" />
@@ -258,7 +322,7 @@ const LearningPage: React.FC = () => {
   };
 
   const LabCard: React.FC<{ lab: Lab }> = ({ lab }) => {
-    const isCompleted = completedContent.includes(lab.id);
+    const isAnimatic = lab.mode === 'animatic' || lab.id.endsWith('-animatic');
 
     return (
       <motion.div
@@ -267,13 +331,12 @@ const LearningPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
       >
-        <Card className={`transition-all duration-200 hover:shadow-lg ${isCompleted ? 'ring-2 ring-green-500 bg-green-50/50 dark:bg-green-950/20' : ''}`}>
+        <Card className={`transition-all duration-200 hover:shadow-lg`}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <FlaskConical className="h-5 w-5 text-purple-600" />
                 <CardTitle className="text-lg">{lab.title}</CardTitle>
-                {isCompleted && <Badge variant="secondary" className="bg-green-100 text-green-800">Completed</Badge>}
               </div>
               <Badge className={getDifficultyColor(lab.difficulty)}>
                 {lab.difficulty}
@@ -329,16 +392,22 @@ const LearningPage: React.FC = () => {
 
             <div className="flex gap-2 mt-4">
               <Button
-                onClick={() => completeContent(lab.id, lab.xpReward)}
-                disabled={isCompleted}
+                onClick={() => openDetailLab(lab)}
                 className="flex-1"
               >
-                {isCompleted ? 'Completed' : 'Start Lab'}
+                View Details
               </Button>
+              {isAnimatic ? (
+                <Button variant="outline" size="sm" onClick={() => openAnimLab(lab.id)}>
+                  <Play className="h-4 w-4 mr-1" />
+                  Play Animatic
+              </Button>
+              ) : (
               <Button variant="outline" size="sm">
                 <Play className="h-4 w-4 mr-1" />
                 Instructions
               </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -347,7 +416,7 @@ const LearningPage: React.FC = () => {
   };
 
   const BlogCard: React.FC<{ blog: Blog }> = ({ blog }) => {
-    const isCompleted = completedContent.includes(blog.id);
+    const blogXP = Math.max(15, Math.min(60, blog.readTime * 5));
 
     return (
       <motion.div
@@ -356,13 +425,12 @@ const LearningPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
       >
-        <Card className={`transition-all duration-200 hover:shadow-lg ${isCompleted ? 'ring-2 ring-green-500 bg-green-50/50 dark:bg-green-950/20' : ''}`}>
+        <Card className={`transition-all duration-200 hover:shadow-lg`}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-blue-600" />
                 <CardTitle className="text-lg">{blog.title}</CardTitle>
-                {isCompleted && <Badge variant="secondary" className="bg-green-100 text-green-800">Read</Badge>}
                 {blog.featured && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Featured</Badge>}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -371,6 +439,9 @@ const LearningPage: React.FC = () => {
             </div>
             <CardDescription>{blog.excerpt}</CardDescription>
           </CardHeader>
+          {blog.thumbnailUrl && (
+            <img src={blog.thumbnailUrl} alt={blog.title} className="w-full h-40 object-cover" />
+          )}
           
           <CardContent>
             <div className="flex items-center justify-between mb-4">
@@ -381,7 +452,7 @@ const LearningPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Zap className="h-4 w-4" />
-                  {blog.xpReward} XP
+                {blogXP} XP
                 </div>
                 <div className="flex items-center gap-1">
                   <TrendingUp className="h-4 w-4" />
@@ -399,12 +470,163 @@ const LearningPage: React.FC = () => {
             </div>
 
             <div className="flex gap-2">
-              <Button
-                onClick={() => completeContent(blog.id, blog.xpReward)}
-                disabled={isCompleted}
-                className="flex-1"
-              >
-                {isCompleted ? 'Read' : 'Read Article'}
+              <Button onClick={() => window.location.assign(`/student/learning/blogs/${blog.id}`)} className="flex-1">
+                Read Article
+              </Button>
+              <Button variant="outline" size="sm">
+                <Play className="h-4 w-4 mr-1" />
+                Preview
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+
+  const ModuleCard: React.FC<{ module: CourseModule }> = ({ module }) => {
+
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+      >
+        <Card className={`transition-all duration-200 hover:shadow-lg`}>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-purple-600" />
+                <CardTitle className="text-lg">{module.title}</CardTitle>
+              </div>
+              <Badge className={getDifficultyColor(module.level)}>
+                {module.level}
+              </Badge>
+            </div>
+            <CardDescription>{module.problemStatement}</CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {module.duration} min
+                </div>
+                <div className="flex items-center gap-1">
+                  <Zap className="h-4 w-4" />
+                  {module.xpReward} XP
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {module.subject}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <h4 className="font-semibold text-sm mb-2">Learning Objectives:</h4>
+                <ul className="text-sm space-y-1">
+                  {module.learningObjectives.slice(0, 2).map((objective, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 bg-purple-600 rounded-full mt-2 flex-shrink-0" />
+                      <span>{objective}</span>
+                    </li>
+                  ))}
+                  {module.learningObjectives.length > 2 && (
+                    <li className="text-xs text-muted-foreground">
+                      +{module.learningObjectives.length - 2} more objectives
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={() => window.location.assign(`/student/learning/modules/${module.id}`)} className="flex-1">
+                Start Module
+              </Button>
+              <Button variant="outline" size="sm">
+                <Play className="h-4 w-4 mr-1" />
+                Preview
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+
+  const LessonModuleCard: React.FC<{ module: LessonModule }> = ({ module }) => {
+
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+      >
+        <Card className={`transition-all duration-200 hover:shadow-lg`}>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+                <CardTitle className="text-lg">{module.title}</CardTitle>
+              </div>
+              <div className="flex flex-col gap-1">
+                <Badge className={getDifficultyColor(module.level)}>
+                  {module.level}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  Class {module.class}
+                </Badge>
+              </div>
+            </div>
+            <CardDescription>{module.problemStatement}</CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {module.duration} min
+                </div>
+                <div className="flex items-center gap-1">
+                  <Zap className="h-4 w-4" />
+                  {module.xpReward} XP
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {module.subject}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <h4 className="font-semibold text-sm mb-2">Learning Objectives:</h4>
+                <ul className="text-sm space-y-1">
+                  {module.learningObjectives.slice(0, 2).map((objective, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
+                      <span>{objective}</span>
+                    </li>
+                  ))}
+                  {module.learningObjectives.length > 2 && (
+                    <li className="text-xs text-muted-foreground">
+                      +{module.learningObjectives.length - 2} more objectives
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={() => window.location.assign(`/student/learning/modules/${module.id}`)} className="flex-1">
+                Start Lesson
               </Button>
               <Button variant="outline" size="sm">
                 <Play className="h-4 w-4 mr-1" />
@@ -481,6 +703,21 @@ const LearningPage: React.FC = () => {
                     <SelectItem value="advanced">Advanced</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={selectedClass === 'all' ? 'all' : String(selectedClass)} onValueChange={(value) => setSelectedClass(value === 'all' ? 'all' : parseInt(value))}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Classes</SelectItem>
+                    <SelectItem value="6">Class 6</SelectItem>
+                    <SelectItem value="7">Class 7</SelectItem>
+                    <SelectItem value="8">Class 8</SelectItem>
+                    <SelectItem value="9">Class 9</SelectItem>
+                    <SelectItem value="10">Class 10</SelectItem>
+                    <SelectItem value="11">Class 11</SelectItem>
+                    <SelectItem value="12">Class 12</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Select value={selectedType} onValueChange={setSelectedType}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Type" />
@@ -496,14 +733,34 @@ const LearningPage: React.FC = () => {
                 </Select>
               </div>
             </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                className={`px-3 py-1.5 rounded-md border ${selectedSubject === 'math' && activeTab === 'modules' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}
+                onClick={() => { setSelectedSubject('math'); setActiveTab('modules'); }}
+              >Math Modules</button>
+              <button
+                className={`px-3 py-1.5 rounded-md border ${selectedSubject === 'science' && activeTab === 'modules' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}
+                onClick={() => { setSelectedSubject('science'); setActiveTab('modules'); }}
+              >Science Modules</button>
+              <button
+                className={`px-3 py-1.5 rounded-md border ${selectedSubject === 'technology' && activeTab === 'modules' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}
+                onClick={() => { setSelectedSubject('technology'); setActiveTab('modules'); }}
+              >Tech Modules</button>
+              <button
+                className={`px-3 py-1.5 rounded-md border ${selectedSubject === 'engineering' && activeTab === 'modules' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}
+                onClick={() => { setSelectedSubject('engineering'); setActiveTab('modules'); }}
+              >Engineering Modules</button>
+            </div>
           </CardContent>
         </Card>
 
         {/* Content Tabs */}
-        <Tabs defaultValue="lessons" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={activeTab} onValueChange={(v: 'lessons' | 'lesson-modules' | 'labs' | 'blogs' | 'modules') => setActiveTab(v)} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="lessons">Lessons ({filteredContent.length})</TabsTrigger>
+            <TabsTrigger value="lesson-modules">Lesson Modules ({filteredLessonModules.length})</TabsTrigger>
             <TabsTrigger value="labs">Labs ({filteredLabs.length})</TabsTrigger>
+            <TabsTrigger value="modules">Course Modules ({filteredModules.length})</TabsTrigger>
             <TabsTrigger value="blogs">Blogs ({filteredBlogs.length})</TabsTrigger>
           </TabsList>
 
@@ -517,11 +774,31 @@ const LearningPage: React.FC = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="lesson-modules" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AnimatePresence>
+                {filteredLessonModules.map((module) => (
+                  <LessonModuleCard key={module.id} module={module} />
+                ))}
+              </AnimatePresence>
+            </div>
+          </TabsContent>
+
           <TabsContent value="labs" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence>
                 {filteredLabs.map((lab) => (
                   <LabCard key={lab.id} lab={lab} />
+                ))}
+              </AnimatePresence>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="modules" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AnimatePresence>
+                {filteredModules.map((module) => (
+                  <ModuleCard key={module.id} module={module} />
                 ))}
               </AnimatePresence>
             </div>
@@ -538,10 +815,40 @@ const LearningPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <AnimatePresence>
+        {animLabOpen && activeAnimLabId && (
+          <AnimatedLabModal labId={activeAnimLabId} open={animLabOpen} onClose={closeAnimLab} />)
+        }
+      </AnimatePresence>
+      <AnimatePresence>
+        {detailLabOpen && activeDetailLab && (
+          <LabDetailModal
+            open={detailLabOpen}
+            lab={activeDetailLab}
+            onClose={closeDetailLab}
+            onComplete={(id, xp) => { completeContent(id, xp); closeDetailLab(); }}
+            isCompleted={completedContent.includes(activeDetailLab.id)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {moduleModalOpen && activeModule && (
+          <CourseModuleModal
+            open={moduleModalOpen}
+            module={activeModule}
+            onClose={closeModule}
+            onComplete={(id, xp) => { completeContent(id, xp); closeModule(); }}
+            isCompleted={completedContent.includes(activeModule.id)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 export default LearningPage;
+
+
+
 
 

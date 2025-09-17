@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "math-algebra-en",
+      "path": "/content/samples/math-algebra-en.json"
+    },
+    {
+      "id": "science-motion-en",
+      "path": "/content/samples/science-motion-en.json"
+    }
+  ]
+}
+
+
+
+
