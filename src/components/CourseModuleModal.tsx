@@ -325,3 +325,4 @@ const CourseModuleModal: React.FC<CourseModuleModalProps> = ({ module, open, onC
 
 export default CourseModuleModal;
 
+
